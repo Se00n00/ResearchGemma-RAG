@@ -3,7 +3,7 @@
 For Evaluating LLM and Agentic-Rag i needed to find a golden dataset that meet the following criteria:
 
  - Able to evaluate both llm and agentic phase for same task: Research Paper QA
- - Contains data that is enriched enough to be evaluated on key metrics like hallucinations, coherence and other llm metrics. [Metrics](ResearchGemma-RAG/docs/evaluation_metrics.md)
+ - Contains data that is enriched enough to be evaluated on key metrics like hallucinations, coherence and other llm metrics. [Metrics](evaluation_metrics.md)
 
 Usually Though Finding such QA dataset for this task would be tidious but since rag had been a popular for over few years there exists numberous of dataset on open source platforms like [Huggingface](https://huggingface.co/datasets), where i find few dataset that might do my job:
 
@@ -106,14 +106,14 @@ This is exactily what i needed for my project:
 
 ### Final Dataset Format:
 
-<code> [Qasper_papers](ResearchGemma-RAG/data/qasper_paper.jsonl) </code> 
+<code> [Qasper_papers](../data/qasper_paper.jsonl) </code> 
 ```
 {
     paper_id : paper_context
 }
 ```
 
-<code> [Qasper_qa](ResearchGemma-RAG/data/qasper_qa.jsonl) </code> : Langsmith format 
+<code> [Qasper_qa](../data/qasper_qa.jsonl) </code> : Langsmith format 
 ```
 {
     input: str,
