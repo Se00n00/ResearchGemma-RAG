@@ -106,7 +106,7 @@ This is exactily what i needed for my project:
 
 ### Final Dataset Format:
 
-<code> [Qasper_papers](../data/qasper_paper.jsonl) </code> 
+<code> [Qasper_papers](../data/qasper_papers.jsonl) </code> 
 ```
 {
     paper_id : paper_context
