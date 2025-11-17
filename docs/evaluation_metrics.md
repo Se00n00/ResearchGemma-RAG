@@ -193,30 +193,81 @@ For each query, it takes the rank of the first relevant result, invert it and th
 
 ## LLM Metrics
 ### Correctness
+**Respose vs Reference Answer**
+
+Correctness measures how similiar/correct is the RAG chain answer, relative to a ground-truth answer
 
 <code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
 
 ### Groundness
-<code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
+**Response vs Retrieved Docs**
 
-### Hallucinations
-<code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
+Groundness measures to what extent does the generated response agree with the retrieved context
+
+<code>Llm_phase: NO USAGE, Agentic Phase: USAGE</code>
+
+### Hallucinations (LLM Intristic)
+
+This is tricky one, though Groundness measures hallucination (1- groundness), this is not a proper way to evaluate intristic LLM hallucination.
+
+hence the hallucination here should be based on input vs generated answer and judge should decide if output contradicts any known world facts, scientifc truths or widely accepted knowledge.
+
+Since this would be similar to (1- Correctness), hence it would be optional to use in any of the phase
+
+<code>Llm_phase: OPTIONAL, Agentic Phase: OPTIONAL</code>
 
 ### Faithfulness
-<code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
+
+Whether the response logically follows and relies only on the retrieved evidence.
+
+<code>Llm_phase: NO USAGE, Agentic Phase: USAGE</code>
 
 ### relevence
+**Response vs Input**
+
+Relevance or Genrated Relevance measures how well does the generated response address the initial user input
+
 <code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
 
+### Retreival relevance
+**Retrieved docs vs input**
+
+It measures how relvant are the retrieved results for this query
+
 ### Coherence
+It measures the clarity, structure, and readability of the generated response.
 <code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
 
 ## System Metrics
 ### Latency
+Time taken to produce a response for a single request.
+
+this includes: 
+    retrival > 
+    tokenization >
+    Token generation > 
+    TTLT (Time-to-last-token)
+
+*low latency ~ Better User Experience*
+
 <code>Llm_phase: USAGE, Agentic Phase: USAGE</code>
 
 ### Memory
+How much CPU + GPU memory the model + inference pipeline consumes
+
+This inclues:
+ - Model weights
+ - KV caches
+ - Retreived data
+ - token embeddings
+
+*This helps to determine Cost of your system and determines how much conccurrent requrests you can run*
+
 <code>Llm_phase: USAGE, Agentic Phase: NO USAGE</code>
 
 ### Throughput
+How much tokens OR Requests system can process per second
+
+*Determines how many user can system supoort & How much scalable the system is*
+
 <code>Llm_phase: USAGE, Agentic Phase: NO USAGE</code>
