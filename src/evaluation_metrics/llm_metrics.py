@@ -42,7 +42,7 @@ correctness_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def correctness(inputs: dict, outputs: dict, reference_outputs:dict) -> float:
+def correctness(inputs: dict, outputs: dict, reference_outputs = None) -> float:
     msgs = correctness_prompt.format_messages(
         question = inputs["input"],
         answer = outputs["answer"],
