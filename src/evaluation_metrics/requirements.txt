@@ -2,3 +2,5 @@ langchain
 langchain_openai
 python-dotenv
 typing
+pyterrier
+ragas

@@ -13,7 +13,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 
 class MetricScore(TypedDict):
-    score: Annotated[int, ..., "Score <1-10>"]
+    score: Annotated[float, ..., "Score <0-1>"]
 
 judge = ChatOpenAI(
     model = LLM,
@@ -25,13 +25,13 @@ judge = ChatOpenAI(
 
 
 # --------------------------------------------------------------------------- #
-#                               CORRECTNESS
+#                               CORRECTNESS             Response vs Reference answer
 # --------------------------------------------------------------------------- #
 
 correctness_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "You are an evaluator. Score the correctness of the generated response "
-     "compared to the reference answer. Return ONLY JSON: 'score': <1-10>"
+     "compared to the reference answer. Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -42,11 +42,11 @@ correctness_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def correctness(inputs: dict, outputs: dict) -> int:
+def correctness(inputs: dict, outputs: dict) -> float:
     msgs = correctness_prompt.format_messages(
-        question=inputs["question"],
-        answer=outputs["answer"],
-        reference=inputs["reference_answer"]
+        question = inputs["input"],
+        answer = outputs["answer"],
+        reference = inputs["expected_output"]
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
@@ -54,14 +54,14 @@ def correctness(inputs: dict, outputs: dict) -> int:
 
 
 # --------------------------------------------------------------------------- #
-#                               GROUNDNESS
+#                               GROUNDNESS              Response vs Retrieved Docs
 # --------------------------------------------------------------------------- #
 
 groundness_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Evaluate how grounded the answer is in the retrieved documents.\n"
      "Use ONLY the docs, no world knowledge.\n"
-     "Return ONLY JSON: 'score': <1-10>"
+     "Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -70,24 +70,24 @@ groundness_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def groundness(inputs: dict, outputs: dict) -> int:
-    docs = "\n\n".join(d.page_content for d in outputs["documents"])
+def groundness(inputs: dict, outputs: dict) -> float:
+    docs = "\n\n".join(d for d in outputs["context"])
     msgs = groundness_prompt.format_messages(
-        docs=docs,
-        answer=outputs["answer"]
+        docs = docs,
+        answer = outputs["answer"]
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
 
 
 # --------------------------------------------------------------------------- #
-#                               HALLUCINATION
+#                               HALLUCINATION             LLM Intristic Hallucination
 # --------------------------------------------------------------------------- #
 
 hallucination_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Evaluate intrinsic hallucination. Check if answer contradicts real-world facts.\n"
-     "Return ONLY JSON: 'score': <1-10>"
+     "Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -96,23 +96,23 @@ hallucination_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def hallucination_llm(inputs: dict, outputs: dict) -> int:
+def hallucination_llm(inputs: dict, outputs: dict) -> float:
     msgs = hallucination_prompt.format_messages(
-        question=inputs["question"],
-        answer=outputs["answer"]
+        question = inputs["input"],
+        answer = outputs["answer"]
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
 
 
 # --------------------------------------------------------------------------- #
-#                               FAITHFULNESS
+#                               FAITHFULNESS                response vs retrieved docs
 # --------------------------------------------------------------------------- #
 
 faithfulness_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Evaluate whether the answer relies ONLY on retrieved evidence.\n"
-     "Return ONLY JSON: 'score': <1-10>"
+     "Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -121,24 +121,24 @@ faithfulness_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def faithfulness(inputs: dict, outputs: dict) -> int:
-    docs = "\n\n".join(d.page_content for d in outputs["documents"])
+def faithfulness(inputs: dict, outputs: dict) -> float:
+    docs = "\n\n".join(d for d in outputs["documents"])
     msgs = faithfulness_prompt.format_messages(
-        docs=docs,
-        answer=outputs["answer"]
+        docs = docs,
+        answer = outputs["answer"]
     )
     res: MetricScore = judge.invoke(msgs)
-    return 
+    return res['score']
 
 
 # --------------------------------------------------------------------------- #
-#                               RELEVANCE
+#                               RELEVANCE                    response vs input
 # --------------------------------------------------------------------------- #
 
 relevance_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Evaluate how well the answer addresses the user's question.\n"
-     "Return ONLY JSON: 'score': <1-10>"
+     "Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -147,10 +147,10 @@ relevance_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def relevance(inputs: dict, outputs: dict) -> int:
+def relevance(inputs: dict, outputs: dict) -> float:
     msgs = relevance_prompt.format_messages(
-        question=inputs["question"],
-        answer=outputs["answer"]
+        question = inputs["input"],
+        answer = outputs["answer"]
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
@@ -158,13 +158,13 @@ def relevance(inputs: dict, outputs: dict) -> int:
 
 
 # --------------------------------------------------------------------------- #
-#                           RETRIEVAL RELEVANCE
+#                           RETRIEVAL RELEVANCE                 retreived docs vs input
 # --------------------------------------------------------------------------- #
 
 retrieval_relevance_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Evaluate how relevant the retrieved documents are for the user's query.\n"
-     "Return ONLY JSON: 'score': <1-10>"
+     "Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -173,11 +173,11 @@ retrieval_relevance_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def retreival_relevance(inputs: dict, outputs: dict) -> int:
-    docs = "\n\n".join(d.page_content for d in outputs["documents"])
+def retreival_relevance(inputs: dict, outputs: dict) -> float:
+    docs = "\n\n".join(d for d in outputs["documents"])
     msgs = retrieval_relevance_prompt.format_messages(
-        question=inputs["question"],
-        docs=docs
+        question = inputs["input"],
+        docs = docs
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
@@ -185,13 +185,13 @@ def retreival_relevance(inputs: dict, outputs: dict) -> int:
 
 
 # --------------------------------------------------------------------------- #
-#                               COHERENCE
+#                               COHERENCE                       quality of response
 # --------------------------------------------------------------------------- #
 
 coherence_prompt = ChatPromptTemplate.from_messages([
     ("system",
      "Evaluate clarity, structure, and coherence.\n"
-     "Return ONLY JSON: 'score': <1-10>"
+     "Return ONLY JSON: 'score': <0-1>"
     ),
 
     ("human",
@@ -199,9 +199,9 @@ coherence_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def coherence(inputs: dict, outputs: dict) -> int:
+def coherence(inputs: dict, outputs: dict) -> float:
     msgs = coherence_prompt.format_messages(
-        answer=outputs["answer"]
+        answer = outputs["answer"]
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
