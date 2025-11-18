@@ -30,7 +30,7 @@ evaluator_llm = LangchainLLMWrapper(llm)
 #                               Context Recall                       LLM-Based       
 # --------------------------------------------------------------------------- #
 context_recall_judge = LLMContextRecall(llm=evaluator_llm)
-async def llm_context_recall(inputs:dict, outputs:dict):
+async def llm_context_recall(inputs:dict, outputs:dict, reference_outputs:dict):
     """
     Measures how many of the relvant documents were successfully retreived.
     return : 0 - 1
@@ -38,8 +38,8 @@ async def llm_context_recall(inputs:dict, outputs:dict):
     example = SingleTurnSample(
         user_input = inputs['input'],
         response = outputs['answer'],
-        reference = inputs['expected_output'],
-        retrieved_contexts = outputs['context'],
+        reference = reference_outputs['expected_output'],
+        retrieved_contexts = outputs['context'][0],
     )
     return await context_recall_judge.single_turn_ascore(example)
 
@@ -47,10 +47,10 @@ async def llm_context_recall(inputs:dict, outputs:dict):
 #                               Context Recall                       Non-LLM-Based       
 # --------------------------------------------------------------------------- #
 context_recall = NonLLMContextRecall()
-async def non_llm_context_recall(inputs:dict, outputs:dict):
+async def non_llm_context_recall(inputs:dict, outputs:dict, Metadata):
     example = SingleTurnSample(
-        retrieved_contexts = outputs['context'],
-        reference_contexts = inputs['metadata']['meta_data']['evidence']
+        retrieved_contexts = outputs['context'][0],
+        reference_contexts = Metadata['meta_data']['evidence']
     )
     return await context_recall.single_turn_ascore(example)
 
@@ -60,7 +60,7 @@ async def non_llm_context_recall(inputs:dict, outputs:dict):
 # --------------------------------------------------------------------------- #
 
 context_precision_judge = LLMContextPrecisionWithReference(llm=evaluator_llm)
-async def llm_context_precision(inputs:dict, outputs:dict):
+async def llm_context_precision(inputs:dict, outputs:dict, reference_outputs:dict):
     """
     A llm based methods to determine wheather a retreived context is relevant
 
@@ -71,8 +71,8 @@ async def llm_context_precision(inputs:dict, outputs:dict):
     """
     example = SingleTurnSample(
         user_input = inputs['input'],
-        reference = inputs['expected_output'],
-        retrieved_contexts = outputs['context'],
+        reference = reference_outputs['expected_output'],
+        retrieved_contexts = outputs['context'][0],
     )
 
     return await context_precision_judge.single_turn_ascore(example)
@@ -83,7 +83,7 @@ async def llm_context_precision(inputs:dict, outputs:dict):
 # --------------------------------------------------------------------------- #
 
 context_precision = NonLLMContextPrecisionWithReference()
-async def non_llm_context_precision(inputs:dict, outputs:dict):
+async def non_llm_context_precision(inputs:dict, outputs:dict, Metadata):
     """
     A non-llm based methods to determine wheather a retreived context is relevant
 
@@ -92,8 +92,8 @@ async def non_llm_context_precision(inputs:dict, outputs:dict):
         reference_contexts: list[str]
     """
     example = SingleTurnSample(
-        retrieved_contexts = outputs['context'],
-        reference_contexts = inputs['metadata']['meta_data']['evidence']
+        retrieved_contexts = outputs['context'][0],
+        reference_contexts = Metadata['meta_data']['evidence']
     )
     return await context_precision.single_turn_ascore(example)
 
@@ -111,9 +111,9 @@ async def non_llm_context_precision(inputs:dict, outputs:dict):
 #                               Exact Match       
 # --------------------------------------------------------------------------- #
 em_scorer = ExactMatch()
-async def EM(inputs:dict, outputs:dict):
+async def EM(inputs:dict, outputs:dict, reference_outputs:dict):
     result = await em_scorer.ascore(
-        reference = inputs['expected_output'],
+        reference = reference_outputs['expected_output'],
         response = outputs['answer'] 
     )
 
@@ -123,9 +123,9 @@ async def EM(inputs:dict, outputs:dict):
 #                               LLM String Similarity       
 # --------------------------------------------------------------------------- #
 SS_scorer = NonLLMStringSimilarity(distance_measure=DistanceMeasure.LEVENSHTEIN)
-async def String_Similarity(inputs:dict, outputs:dict):
+async def String_Similarity(inputs:dict, outputs:dict, reference_outputs:dict):
     result = await SS_scorer.ascore(
-        reference = inputs['expected_output'],
+        reference = reference_outputs['expected_output'],
         response = outputs['answer'] 
     )
 
@@ -135,9 +135,9 @@ async def String_Similarity(inputs:dict, outputs:dict):
 #                               BLEU Score       
 # --------------------------------------------------------------------------- #
 bleu_scorer = BleuScore()
-async def BLUE(inputs:dict, outputs:dict):
+async def BLUE(inputs:dict, outputs:dict, reference_outputs:dict):
     result = await bleu_scorer.ascore(
-        reference = inputs['expected_output'],
+        reference = reference_outputs['expected_output'],
         response = outputs['answer'] 
     )
 
@@ -147,9 +147,9 @@ async def BLUE(inputs:dict, outputs:dict):
 #                               RougeL       
 # --------------------------------------------------------------------------- #
 rouge_scorer = RougeScore(rouge_type="rougeL", mode="fmeasure")
-async def rougeL(inputs:dict, outputs:dict):
+async def rougeL(inputs:dict, outputs:dict, reference_outputs:dict):
     result = await rouge_scorer.ascore(
-        reference = inputs['expected_output'],
+        reference = reference_outputs['expected_output'],
         response = outputs['answer'] 
     )
 

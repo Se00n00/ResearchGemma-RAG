@@ -42,11 +42,11 @@ correctness_prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def correctness(inputs: dict, outputs: dict) -> float:
+def correctness(inputs: dict, outputs: dict, reference_outputs:dict) -> float:
     msgs = correctness_prompt.format_messages(
         question = inputs["input"],
         answer = outputs["answer"],
-        reference = inputs["expected_output"]
+        reference = reference_outputs["expected_output"]
     )
     res: MetricScore = judge.invoke(msgs)
     return res["score"]
@@ -71,7 +71,7 @@ groundness_prompt = ChatPromptTemplate.from_messages([
 ])
 
 def groundness(inputs: dict, outputs: dict) -> float:
-    docs = "\n\n".join(d for d in outputs["context"])
+    docs = "\n\n".join(d for d in outputs["context"][0])
     msgs = groundness_prompt.format_messages(
         docs = docs,
         answer = outputs["answer"]
@@ -122,7 +122,7 @@ faithfulness_prompt = ChatPromptTemplate.from_messages([
 ])
 
 def faithfulness(inputs: dict, outputs: dict) -> float:
-    docs = "\n\n".join(d for d in outputs["documents"])
+    docs = "\n\n".join(d for d in outputs["context"][0])
     msgs = faithfulness_prompt.format_messages(
         docs = docs,
         answer = outputs["answer"]
@@ -174,7 +174,7 @@ retrieval_relevance_prompt = ChatPromptTemplate.from_messages([
 ])
 
 def retreival_relevance(inputs: dict, outputs: dict) -> float:
-    docs = "\n\n".join(d for d in outputs["documents"])
+    docs = "\n\n".join(d for d in outputs["context"][0])
     msgs = retrieval_relevance_prompt.format_messages(
         question = inputs["input"],
         docs = docs
